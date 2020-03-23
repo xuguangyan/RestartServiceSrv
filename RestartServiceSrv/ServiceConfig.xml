@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<service>
+  <serviceName>RestartServiceSrv</serviceName>
+  <displayName>定时重启服务工具</displayName>
+  <discription></discription>
+</service>

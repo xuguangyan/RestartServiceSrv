@@ -1,0 +1,16 @@
+# Windows
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+
+# VS
+obj/
+*.suo
+*.pdb
+*.manifest
+RestartServiceSrv/bin/Debug/RestartServiceSrv.vshost.exe
+RestartServiceSrv/bin/Debug/RestartServiceSrv.vshost.exe.config
+RestartServiceSrv/bin/Debug/RestartServiceSrv.InstallLog
+RestartServiceSrv/bin/Debug/InstallUtil.InstallLog
+RestartServiceSrv/bin/Debug/Log.txt
+RestartServiceSrv/RestartServiceSrv.csproj.user

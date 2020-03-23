@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<service>
+  <serviceName>RestartServiceSrv</serviceName>
+  <displayName>定时重启服务工具</displayName>
+  <discription>尝试检测X5是否正常，如果不正常定时重启X5服务</discription>
+</service>
