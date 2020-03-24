@@ -167,12 +167,12 @@ namespace RestartServiceSrv.Common
                     StringBuilder sb = new StringBuilder();
                     while ((count = reader.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        sb.Append(new string(buffer));
+                        sb.Append(new string(buffer, 0, count));
                     }
                     this._respText = sb.ToString();
-                } 
+                }
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 this._respText = e.Message;
                 return false;
@@ -259,7 +259,7 @@ namespace RestartServiceSrv.Common
                     StringBuilder sb = new StringBuilder();
                     while ((count = reader.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        sb.Append(new string(buffer));
+                        sb.Append(new string(buffer, 0, count));
                     }
                     this._respText = sb.ToString();
                 } 

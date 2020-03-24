@@ -22,22 +22,24 @@ namespace RestartServiceSrv
             };
             ServiceBase.Run(ServicesToRun);
 
-            /*
-            //测试1
-            RestartSrv srv = new RestartSrv();
-            srv.Start();
-            */
+
+            ////测试1
+            //RestartSrv srv = new RestartSrv();
+            //srv.Start();
+
 
             //测试2
-            /*RequestSrv req = new RequestSrv();
-            req.Start();*/
+            RequestSrv req = new RequestSrv();
+            req.Start();
 
-            /*
-            //测试3
-            ConfigHelper.Refresh();
-            SendMailUtil.sendCommonMail(ConfigHelper.mailAddrs
-                , ConfigHelper.mailSubjectReq, ConfigHelper.mailTemplReq);
-            */
+            ////测试3
+            //ConfigHelper.Refresh();
+            //SendMailUtil.sendCommonMail(ConfigHelper.mailAddrs
+            //    , ConfigHelper.mailSubjectReq, ConfigHelper.mailTemplReq);
+
+            ////测试4
+            //RestartDateSrv srv2 = new RestartDateSrv();
+            //srv2.Start();
         }
     }
 }

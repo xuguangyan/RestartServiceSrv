@@ -68,6 +68,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\RestartSrv.cs" />
     <Compile Include="Service\RequestSrv.cs" />
+    <Compile Include="Service\RestartDateSrv.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ProjectInstaller.resx">

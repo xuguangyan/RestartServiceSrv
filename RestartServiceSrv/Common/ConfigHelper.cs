@@ -48,6 +48,10 @@ namespace RestartServiceSrv.Common
             WriteLog = GetValue("WriteLog", false);
 
             //服务监测配置
+            RestartServiceName = GetValue("RestartServiceName", "");
+            TriggerTime = GetValue("TriggerTime", "");
+
+            //服务监测配置
             ServiceName = GetValue("ServiceName", "");
             Interval = GetValue("Interval", 3);
             ForcedRestart = GetValue("ForcedRestart", false);
@@ -194,7 +198,7 @@ namespace RestartServiceSrv.Common
                 xElem = (XmlElement)xNode.SelectSingleNode("//add[@key='" + AppKey + "']");
             }
             catch { return defValue; }
-            
+
             if (xElem != null)
             {
                 string value = xElem.GetAttribute("value");
@@ -216,8 +220,22 @@ namespace RestartServiceSrv.Common
         /// </summary>
         public static bool WriteLog;
 
+        #region 关于服务重启的配置
+
+        /// <summary>
+        /// 需要按期重启的服务名称（不监控留空，多个逗号隔开）
+        /// </summary>
+        public static string RestartServiceName;
+
+        /// <summary>
+        /// 服务重启触发时间(每天，精确到分钟，格式：HH:mm)
+        /// </summary>
+        public static string TriggerTime;
+
+        #endregion
+
         #region 关于服务监测的配置
-        
+
         /// <summary>
         /// 需要监控的服务名称（不监控留空，多个逗号隔开）
         /// </summary>
@@ -250,7 +268,7 @@ namespace RestartServiceSrv.Common
         #endregion
 
         #region 关于网址监测的配置
-        
+
         /// <summary>
         /// 发起Http请求地址清单（key格式如ReqUrl_*，取1-10个，value空则不执行）
         /// </summary>

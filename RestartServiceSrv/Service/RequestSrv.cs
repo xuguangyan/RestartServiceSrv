@@ -5,6 +5,7 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace RestartServiceSrv.Service
 {
@@ -18,6 +19,8 @@ namespace RestartServiceSrv.Service
         //Http请求线程
         private Thread thread;
         HttpRequest httpRequest = new HttpRequest();
+        // 日志前缀
+        private const string LOG_PREFIX = "T03=>";
 
         public RequestSrv()
         {
@@ -39,21 +42,32 @@ namespace RestartServiceSrv.Service
         //运行线程
         private void Run()
         {
-            LogHelper.Log("Http请求线程开始");
+            LogHelper.Log("Http请求线程开始", LOG_PREFIX);
 
-            int maxCount = ConfigHelper.GetValue("ReqUrl_MaxCount", 100);
-            for (int i = 1; i <= maxCount; i++)
+            while (true)
             {
-                string cfgUrl = ConfigHelper.GetValue("ReqUrl_"+i, "");
- 
-                if (cfgUrl.Trim().Length>0)
+                int realCount = 0;
+                int maxCount = ConfigHelper.GetValue("ReqUrl_MaxCount", 100);
+                for (int i = 1; i <= maxCount; i++)
                 {
-                    monitorUrl(cfgUrl);
-                    Thread.Sleep(1000 * 60 * ConfigHelper.ReqInterval);
+                    string cfgUrl = ConfigHelper.GetValue("ReqUrl_" + i, "");
+
+                    if (cfgUrl.Trim().Length > 0)
+                    {
+                        realCount++;
+                        monitorUrl(cfgUrl);
+                    }
                 }
+                if (realCount <= 0)
+                {
+                    LogHelper.Log("没有需要监听Http请求的地址", LOG_PREFIX);
+                    break;
+                }
+
+                Thread.Sleep(1000 * 60 * ConfigHelper.ReqInterval);
             }
 
-            LogHelper.Log("Http请求线程结束");
+            LogHelper.Log("Http请求线程结束", LOG_PREFIX);
         }
 
         /// <summary>
@@ -80,33 +94,52 @@ namespace RestartServiceSrv.Service
 
             reqUrl = reqUrl.Replace("&amp;", "&");
 
+            string pattern = "";
+            if (strTmp.Length > 2)
+            {
+                pattern = strTmp[2]; //匹配字符
+            }
+
             httpRequest.Code = "utf-8";
             bool reqOK = httpRequest.sendGet(reqUrl);
+
             if (reqOK)
             {
-                LogHelper.Log(string.Format("网站【{0}】请求成功", reqWeb));
+                if (pattern.Length <= 0)
+                {
+                    LogHelper.Log(string.Format("网站【{0}】请求成功", reqWeb), LOG_PREFIX);
+                    return;
+                }
+
+                string respText = httpRequest.RespText;
+                Match m = Regex.Match(respText, pattern);
+                if (m.Success)
+                {
+                    LogHelper.Log(string.Format("网站【{0}】请求成功，响应匹配符【{1}】", reqWeb, m.ToString()), LOG_PREFIX);
+                    return;
+                }
+            }
+
+            // 以下是失败的情况
+            string smsTempl = ConfigHelper.smsTemplReq;
+            string msg = smsTempl.Replace("${ReqWeb}", reqWeb);
+            string respMsg = reqOK ? "响应匹配失败，匹配规则【" + pattern + "】" : httpRequest.RespText;
+            if (msg.Length > 0)
+            {
+                LogHelper.Log(msg + " 响应：" + respMsg, LOG_PREFIX);
             }
             else
             {
-                string smsTempl = ConfigHelper.smsTemplReq;
-                string msg = smsTempl.Replace("${ReqWeb}", reqWeb);
-                if (msg.Length > 0)
-                {
-                    LogHelper.Log(msg + " 响应：" + httpRequest.RespText);
-                }
-                else
-                {
-                    LogHelper.Log(string.Format("网站【{0}】请求失败：{1}", reqWeb, httpRequest.RespText));
-                }
-
-                //发送短信
-                SendSmsUtil.sendSms(msg);
-
-                //发送邮件
-                string mailSubject = ConfigHelper.mailSubjectReq.Replace("${ReqWeb}", reqWeb);
-                string mailBody = ConfigHelper.mailTemplReq.Replace("${ReqWeb}", reqWeb).Replace("${ErrMsg}", httpRequest.RespText);
-                SendMailUtil.sendCommonMail(ConfigHelper.mailAddrs, mailSubject, mailBody);
+                LogHelper.Log(string.Format("网站【{0}】请求失败：{1}", reqWeb, respMsg), LOG_PREFIX);
             }
+
+            //发送短信
+            SendSmsUtil.sendSms(msg);
+
+            //发送邮件
+            string mailSubject = ConfigHelper.mailSubjectReq.Replace("${ReqWeb}", reqWeb);
+            string mailBody = ConfigHelper.mailTemplReq.Replace("${ReqWeb}", reqWeb).Replace("${ErrMsg}", respMsg);
+            SendMailUtil.sendCommonMail(ConfigHelper.mailAddrs, mailSubject, mailBody);
         }
     }
 }

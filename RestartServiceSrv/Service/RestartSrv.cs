@@ -15,6 +15,8 @@ namespace RestartServiceSrv.Service
     {
         //重启服务线程
         private Thread thread;
+        // 日志前缀
+        private const string LOG_PREFIX = "T02=>";
 
         public RestartSrv()
         {
@@ -36,14 +38,14 @@ namespace RestartServiceSrv.Service
         //运行线程
         private void Run()
         {
-            LogHelper.Log("服务监听线程开始");
+            LogHelper.Log("服务监听线程开始", LOG_PREFIX);
 
             while (true)
             {
                 string services = ConfigHelper.ServiceName.Trim();
                 if (services == "")
                 {
-                    LogHelper.Log("服务名称为空，未执行任务操作");
+                    LogHelper.Log("服务名称为空，未执行任务操作", LOG_PREFIX);
                     break;
                 }
                 string[] srvList = services.Split(',');
@@ -56,7 +58,7 @@ namespace RestartServiceSrv.Service
                 Thread.Sleep(1000 * 60 * ConfigHelper.Interval);
             }
 
-            LogHelper.Log("服务监听线程结束");
+            LogHelper.Log("服务监听线程结束", LOG_PREFIX);
         }
 
         /// <summary>
@@ -65,6 +67,8 @@ namespace RestartServiceSrv.Service
         /// <param name="serviceName"></param>
         private void monitorSrv(string serviceName)
         {
+            string handleMsg = ""; // 处理结果反馈信息
+            string handleMsgDetail = "";
             try
             {
                 ServiceController sc = new ServiceController(serviceName);
@@ -76,11 +80,11 @@ namespace RestartServiceSrv.Service
                     string msg = smsTempl.Replace("${ServiceName}", serviceName);
                     if (msg.Length > 0)
                     {
-                        LogHelper.Log(msg);
+                        LogHelper.Log(msg, LOG_PREFIX);
                     }
                     else
                     {
-                        LogHelper.Log(string.Format("服务【{0}】已停止", serviceName));
+                        LogHelper.Log(string.Format("服务【{0}】已停止", serviceName), LOG_PREFIX);
                     }
                     //发送短信
                     SendSmsUtil.sendSms(msg);
@@ -96,7 +100,9 @@ namespace RestartServiceSrv.Service
                     {
                         sc.Start();
                         sc.WaitForStatus(ServiceControllerStatus.Running);
-                        LogHelper.Log(string.Format("重启服务【{0}】成功", serviceName));
+                        handleMsgDetail = handleMsg = string.Format("重启服务【{0}】成功", serviceName);
+                        LogHelper.Log(handleMsg, LOG_PREFIX);
+
                     }
                 }
                 else//服务已运行
@@ -116,18 +122,33 @@ namespace RestartServiceSrv.Service
                             sc.Start();
                             sc.WaitForStatus(ServiceControllerStatus.Running);
                         }
-                        LogHelper.Log(string.Format("强制重启服务【{0}】成功", serviceName));
+                        handleMsgDetail = handleMsg = string.Format("强制重启服务【{0}】成功", serviceName);
+                        LogHelper.Log(handleMsg, LOG_PREFIX);
                     }
                     else
                     {
-                        LogHelper.Log(string.Format("服务【{0}】运行正常", serviceName));
+                        LogHelper.Log(string.Format("服务【{0}】运行正常", serviceName), LOG_PREFIX);
                     }
                 }
                 sc.Close();
             }
             catch (Exception e)
             {
-                LogHelper.Log(string.Format("重启服务【{0}】失败：{1}", serviceName, e.Message));
+                handleMsg = string.Format("重启服务【{0}】失败，详看服务器日志", serviceName);
+                handleMsgDetail = string.Format("重启服务【{0}】失败：{1}", serviceName, e.Message);
+                LogHelper.Log(handleMsgDetail, LOG_PREFIX);
+            }
+
+            // 发送自动处理结果
+            if (handleMsg.Length > 0)
+            {
+                //发送短信
+                SendSmsUtil.sendSms(handleMsg);
+
+                //发送邮件
+                string mailSubject = "处理反馈：" + ConfigHelper.mailSubjectSrv.Replace("${ServiceName}", serviceName);
+                string mailBody = handleMsgDetail;
+                SendMailUtil.sendCommonMail(ConfigHelper.mailAddrs, mailSubject, mailBody);
             }
         }
     }
