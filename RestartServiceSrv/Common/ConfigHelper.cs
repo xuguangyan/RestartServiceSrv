@@ -46,6 +46,7 @@ namespace RestartServiceSrv.Common
             }
             catch { }
             WriteLog = GetValue("WriteLog", false);
+            SendMsgInterval = GetValue("SendMsgInterval", 30);
 
             //服务监测配置
             RestartServiceName = GetValue("RestartServiceName", "");
@@ -219,6 +220,11 @@ namespace RestartServiceSrv.Common
         /// 是否写日志(默认false)
         /// </summary>
         public static bool WriteLog;
+
+        /// <summary>
+        /// 发送（短信/邮件）通知时间间隔（默认30分钟），间隔内有新通知将被忽略
+        /// </summary>
+        public static int SendMsgInterval;
 
         #region 关于服务重启的配置
 

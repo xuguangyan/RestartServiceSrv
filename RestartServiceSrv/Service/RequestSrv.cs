@@ -21,6 +21,8 @@ namespace RestartServiceSrv.Service
         HttpRequest httpRequest = new HttpRequest();
         // 日志前缀
         private const string LOG_PREFIX = "T03=>";
+        // 记录最后发送消息时间（异常报警）
+        DateTime lastSendSMSDt = System.DateTime.MinValue;
 
         public RequestSrv()
         {
@@ -132,6 +134,16 @@ namespace RestartServiceSrv.Service
             {
                 LogHelper.Log(string.Format("网站【{0}】请求失败：{1}", reqWeb, respMsg), LOG_PREFIX);
             }
+
+            // SendMsgInterval分钟后，才触发通知
+            DateTime now = System.DateTime.Now;
+            if ((now - lastSendSMSDt).TotalMinutes < ConfigHelper.SendMsgInterval)
+            {
+                LogHelper.Log(string.Format("{0}分钟内忽略通知", ConfigHelper.SendMsgInterval), LOG_PREFIX);
+                return;
+            }
+            lastSendSMSDt = now;
+            LogHelper.Log(string.Format("{0}分钟内触发通知", ConfigHelper.SendMsgInterval), LOG_PREFIX);
 
             //发送短信
             SendSmsUtil.sendSms(msg);

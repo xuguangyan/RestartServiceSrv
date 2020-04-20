@@ -19,6 +19,8 @@ namespace RestartServiceSrv.Service
         private const int HEART_BEAT_INTERVAL = 60;
         // 日志前缀
         private const string LOG_PREFIX = "T01=>";
+        // 记录最后发送消息时间（自动处理）
+        DateTime lastSendSMSDt = System.DateTime.MinValue;
 
         public RestartDateSrv()
         {
@@ -127,6 +129,16 @@ namespace RestartServiceSrv.Service
             // 发送自动处理结果
             if (handleMsg.Length > 0)
             {
+                // SendMsgInterval分钟后，才触发通知
+                DateTime now = System.DateTime.Now;
+                if ((now - lastSendSMSDt).TotalMinutes < ConfigHelper.SendMsgInterval)
+                {
+                    LogHelper.Log(string.Format("{0}分钟内忽略通知", ConfigHelper.SendMsgInterval), LOG_PREFIX);
+                    return;
+                }
+                lastSendSMSDt = now;
+                LogHelper.Log(string.Format("{0}分钟内触发通知", ConfigHelper.SendMsgInterval), LOG_PREFIX);
+
                 //发送短信
                 SendSmsUtil.sendSms(handleMsg);
 
